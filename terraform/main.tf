@@ -13,8 +13,9 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+}
 
- resource "aws_vpc" "main" {
+resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -70,7 +71,8 @@ resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public_rt.id
 }
- resource "aws_s3_bucket" "feedback_bucket" {
+
+resource "aws_s3_bucket" "feedback_bucket" {
   bucket = var.s3_bucket_name
 
   tags = {
@@ -137,6 +139,4 @@ resource "aws_iam_policy" "lambda_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_policy.arn
-}
-
 }
