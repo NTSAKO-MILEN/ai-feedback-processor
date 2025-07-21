@@ -7,7 +7,7 @@ data "archive_file" "lambda_zip" {
 resource "aws_lambda_function" "feedback_handler" {
   function_name = "${var.project_name}-lambda"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "main.lambda_handler"
+  handler       = "main.lambda_handler"  # ensure this matches your Python function name
   runtime       = "python3.11"
   filename      = data.archive_file.lambda_zip.output_path
   timeout       = 10
