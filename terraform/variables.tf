@@ -25,6 +25,7 @@ variable "private_subnet_cidr" {
 variable "s3_bucket_name" {
   description = "Name of the S3 bucket for storing feedback"
   type        = string
+  default     = "ai-feedback"
 }
 
 variable "project_name" {
