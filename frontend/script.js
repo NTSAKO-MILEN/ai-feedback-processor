@@ -21,6 +21,7 @@ const confidence = document.getElementById('confidence');
 const processingTime = document.getElementById('processingTime');
 const wordCount = document.getElementById('wordCount');
 const detectedLanguage = document.getElementById('detectedLanguage');
+const wordCountDisplay = document.getElementById('wordCountDisplay'); // Added for real-time word count display
 
 // Data storage
 let feedbackHistory = JSON.parse(localStorage.getItem('feedbackHistory')) || [];
@@ -36,7 +37,7 @@ function setupEventListeners() {
     feedbackForm.addEventListener('submit', handleFormSubmit);
     clearHistoryBtn.addEventListener('click', clearHistory);
     exportBtn.addEventListener('click', exportResults);
-    
+
     // Real-time word count
     feedbackText.addEventListener('input', updateWordCount);
 }
@@ -49,15 +50,22 @@ async function handleFormSubmit(e) {
     const cat = category.value;
     const prio = priority.value;
 
+    // Validate form fields
     if (!text || !cat || !prio) {
         alert('Please fill in all fields');
+        if (!text) feedbackText.classList.add('error');
+        if (!cat) category.classList.add('error');
+        if (!prio) priority.classList.add('error');
         return;
     }
 
-    // Show loading state
+    // Reset error highlighting
+    feedbackText.classList.remove('error');
+    category.classList.remove('error');
+    priority.classList.remove('error');
+
     setLoadingState(true);
 
-    // Create the payload to send to the Lambda via API Gateway
     const payload = {
         feedback: text,
         category: cat,
@@ -65,8 +73,7 @@ async function handleFormSubmit(e) {
     };
 
     try {
-        // Send POST request to API Gateway
-         const response = await fetch('https://mc2msr9tqf.execute-api.us-east-1.amazonaws.com/feedback', {
+        const response = await fetch('https://mc2msr9tqf.execute-api.us-east-1.amazonaws.com/feedback', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -76,16 +83,18 @@ async function handleFormSubmit(e) {
 
         const result = await response.json();
 
-        // Display results
-        displayResults(result);
+        // Add timestamp and original feedback to result
+        result.originalText = text;
+        result.timestamp = Date.now();
 
-        // Save to history
+        displayResults(result);
         saveToHistory(result);
 
-        // Hide loading state
+        // Reset form
+        feedbackForm.reset();
+
         setLoadingState(false);
 
-        // Show results section
         resultsSection.classList.add('show');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
@@ -97,14 +106,10 @@ async function handleFormSubmit(e) {
 
 // Display analysis results
 function displayResults(result) {
-    // Update sentiment display
     scoreValue.textContent = result.sentiment.score;
     sentimentLabel.textContent = result.sentiment.label;
-
-    // Update score circle styling
     scoreCircle.className = `score-circle ${result.sentiment.label}`;
 
-    // Update insights
     insightsList.innerHTML = '';
     result.insights.forEach(insight => {
         const li = document.createElement('li');
@@ -112,18 +117,14 @@ function displayResults(result) {
         insightsList.appendChild(li);
     });
 
-    // Update recommendations
     recommendationsList.innerHTML = '';
     result.recommendations.forEach(rec => {
         const div = document.createElement('div');
         div.className = 'recommendation-item';
-        div.innerHTML = `
-            <strong>${rec.type.toUpperCase()}:</strong> ${rec.text}
-        `;
+        div.innerHTML = `<strong>${rec.type.toUpperCase()}:</strong> ${rec.text}`;
         recommendationsList.appendChild(div);
     });
 
-    // Update metadata
     confidence.textContent = `${result.metadata.confidence}%`;
     processingTime.textContent = `${result.metadata.processingTime}ms`;
     wordCount.textContent = result.metadata.wordCount;
@@ -133,12 +134,9 @@ function displayResults(result) {
 // Save result to history
 function saveToHistory(result) {
     feedbackHistory.unshift(result);
-
-    // Keep only last 10 items
     if (feedbackHistory.length > 10) {
         feedbackHistory = feedbackHistory.slice(0, 10);
     }
-
     localStorage.setItem('feedbackHistory', JSON.stringify(feedbackHistory));
     loadHistory();
 }
@@ -154,9 +152,8 @@ function loadHistory() {
     feedbackHistory.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
-
         const date = new Date(item.timestamp).toLocaleString();
-        const truncatedText = item.originalText.length > 100 
+        const truncatedText = item.originalText.length > 100
             ? item.originalText.substring(0, 100) + '...'
             : item.originalText;
 
@@ -207,20 +204,13 @@ function exportResults() {
 
 // Set loading state
 function setLoadingState(loading) {
-    if (loading) {
-        submitBtn.classList.add('loading');
-        submitBtn.disabled = true;
-    } else {
-        submitBtn.classList.remove('loading');
-        submitBtn.disabled = false;
-    }
+    submitBtn.classList.toggle('loading', loading);
+    submitBtn.disabled = loading;
 }
 
 // Update word count in real-time
 function updateWordCount() {
     const text = feedbackText.value.trim();
     const words = text ? text.split(/\s+/).length : 0;
-    
-    // You could add a word counter display here if needed
-    // For now, it's just used internally
+    wordCountDisplay.textContent = `${words} words`;
 }
