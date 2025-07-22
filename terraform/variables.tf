@@ -1,7 +1,13 @@
 variable "aws_region" {
-  description = "The AWS region to deploy to"
+  description = "AWS region to deploy resources"
   type        = string
   default     = "us-east-1"
+}
+
+variable "project_name" {
+  description = "Project name prefix for resources"
+  type        = string
+  default     = "ai-feedback"
 }
 
 variable "vpc_cidr_block" {
@@ -23,13 +29,7 @@ variable "private_subnet_cidr" {
 }
 
 variable "s3_bucket_name" {
-  description = "Name of the S3 bucket for storing feedback"
+  description = "The name of the S3 bucket"
   type        = string
-  default     = "ai-feedback"
-}
-
-variable "project_name" {
-  description = "A name prefix for all resources"
-  type        = string
-  default     = "ai-feedback"
+  default     = "ai-feedback-milen-20250721"   # <--- change this to your unique bucket name
 }
