@@ -1,102 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Feedback Processor</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 2rem;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    textarea {
-      width: 100%;
-      height: 120px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      resize: vertical;
-      font-size: 1rem;
-    }
-
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      background: #007BFF;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-
-    .message {
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Feedback Processor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Submit Your Feedback</h2>
-    <form id="feedbackForm">
-      <textarea id="feedback" placeholder="Write your feedback here..." required></textarea>
-      <button type="submit">Send Feedback</button>
-      <div class="message" id="responseMsg"></div>
-    </form>
-  </div>
+    <div class="container">
+        <header>
+            <h1>AI Feedback Processor</h1>
+            <p>Analyze and process feedback using AI-powered insights</p>
+        </header>
 
-  <script>
-    document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+        <main>
+            <div class="input-section">
+                <h2>Submit Feedback</h2>
+                <form id="feedbackForm">
+                    <div class="form-group">
+                        <label for="feedbackText">Feedback Text:</label>
+                        <textarea 
+                            id="feedbackText" 
+                            placeholder="Enter your feedback here..."
+                            rows="6"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="product">Product</option>
+                            <option value="service">Service</option>
+                            <option value="support">Support</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
 
-      const feedback = document.getElementById('feedback').value;
-      const responseMsg = document.getElementById('responseMsg');
+                    <div class="form-group">
+                        <label for="priority">Priority Level:</label>
+                        <select id="priority" required>
+                            <option value="">Select priority</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
 
-      try {
-        const res = await fetch('https://your-api-gateway-url.amazonaws.com/dev/feedback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ feedback })
-        });
+                    <button type="submit" id="submitBtn">
+                        <span class="btn-text">Process Feedback</span>
+                        <div class="loader" id="loader"></div>
+                    </button>
+                </form>
+            </div>
 
-        if (res.ok) {
-          responseMsg.textContent = 'Thank you for your feedback!';
-          document.getElementById('feedback').value = '';
-        } else {
-          responseMsg.textContent = 'Failed to send feedback.';
-        }
-      } catch (err) {
-        console.error(err);
-        responseMsg.textContent = 'Something went wrong.';
-      }
-    });
-  </script>
+            <div class="results-section" id="resultsSection">
+                <h2>AI Analysis Results</h2>
+                <div class="analysis-card" id="analysisCard">
+                    <div class="sentiment-analysis">
+                        <h3>Sentiment Analysis</h3>
+                        <div class="sentiment-score" id="sentimentScore">
+                            <div class="score-circle" id="scoreCircle">
+                                <span id="scoreValue">0</span>
+                            </div>
+                            <div class="sentiment-label" id="sentimentLabel">Neutral</div>
+                        </div>
+                    </div>
+
+                    <div class="key-insights">
+                        <h3>Key Insights</h3>
+                        <ul id="insightsList"></ul>
+                    </div>
+
+                    <div class="recommendations">
+                        <h3>AI Recommendations</h3>
+                        <div id="recommendationsList"></div>
+                    </div>
+
+                    <div class="metadata">
+                        <h3>Processing Details</h3>
+                        <div class="metadata-grid">
+                            <div class="metadata-item">
+                                <span class="label">Confidence:</span>
+                                <span id="confidence">--</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="label">Processing Time:</span>
+                                <span id="processingTime">--</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="label">Word Count:</span>
+                                <span id="wordCount">--</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="label">Detected Language:</span>
+                                <span id="detectedLanguage">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2>Recent Feedback</h2>
+                <div class="history-controls">
+                    <button id="clearHistoryBtn">Clear History</button>
+                    <button id="exportBtn">Export Results</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <p class="no-history">No feedback processed yet</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 AI Feedback Processor. Powered by Advanced AI Analytics.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
