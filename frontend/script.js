@@ -44,215 +44,55 @@ function setupEventListeners() {
 // Handle form submission
 async function handleFormSubmit(e) {
     e.preventDefault();
-    
+
     const text = feedbackText.value.trim();
     const cat = category.value;
     const prio = priority.value;
-    
+
     if (!text || !cat || !prio) {
         alert('Please fill in all fields');
         return;
     }
-    
+
     // Show loading state
     setLoadingState(true);
-    
-    // Simulate AI processing delay
-    const startTime = Date.now();
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
-    const endTime = Date.now();
-    
-    // Process feedback
-    const result = await processFeedback(text, cat, prio, endTime - startTime);
-    
-    // Display results
-    displayResults(result);
-    
-    // Save to history
-    saveToHistory(result);
-    
-    // Hide loading state
-    setLoadingState(false);
-    
-    // Show results section
-    resultsSection.classList.add('show');
-    resultsSection.scrollIntoView({ behavior: 'smooth' });
-}
 
-// Simulate AI feedback processing
-async function processFeedback(text, category, priority, processingTime) {
-    const words = text.split(/\s+/).length;
-    
-    // Simulate sentiment analysis
-    const sentiment = analyzeSentiment(text);
-    
-    // Generate insights
-    const insights = generateInsights(text, category, sentiment);
-    
-    // Generate recommendations
-    const recommendations = generateRecommendations(sentiment, category, priority);
-    
-    return {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        originalText: text,
-        category: category,
-        priority: priority,
-        sentiment: sentiment,
-        insights: insights,
-        recommendations: recommendations,
-        metadata: {
-            confidence: Math.round(85 + Math.random() * 10),
-            processingTime: processingTime,
-            wordCount: words,
-            detectedLanguage: 'English'
-        }
+    // Create the payload to send to the Lambda via API Gateway
+    const payload = {
+        feedback: text,
+        category: cat,
+        priority: prio,
     };
-}
 
-// Analyze sentiment (simplified simulation)
-function analyzeSentiment(text) {
-    const positiveWords = ['good', 'great', 'excellent', 'amazing', 'love', 'perfect', 'wonderful', 'fantastic', 'awesome', 'satisfied', 'happy', 'pleased'];
-    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'horrible', 'worst', 'disappointed', 'frustrated', 'angry', 'poor', 'useless', 'broken'];
-    
-    const lowerText = text.toLowerCase();
-    let positiveCount = 0;
-    let negativeCount = 0;
-    
-    positiveWords.forEach(word => {
-        if (lowerText.includes(word)) positiveCount++;
-    });
-    
-    negativeWords.forEach(word => {
-        if (lowerText.includes(word)) negativeCount++;
-    });
-    
-    let score = 50; // neutral baseline
-    score += (positiveCount * 15) - (negativeCount * 15);
-    score = Math.max(0, Math.min(100, score)); // clamp between 0-100
-    
-    let label = 'neutral';
-    if (score >= 70) label = 'positive';
-    else if (score <= 30) label = 'negative';
-    
-    return { score, label };
-}
+    try {
+        // Send POST request to API Gateway
+        const response = await fetch('https://<api-id>.execute-api.<region>.amazonaws.com/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
 
-// Generate insights based on text analysis
-function generateInsights(text, category, sentiment) {
-    const insights = [];
-    const textLength = text.length;
-    const wordCount = text.split(/\s+/).length;
-    
-    // Length-based insights
-    if (textLength > 500) {
-        insights.push('Detailed feedback provided with comprehensive information');
-    } else if (textLength < 100) {
-        insights.push('Brief feedback - consider requesting more specific details');
-    }
-    
-    // Sentiment-based insights
-    if (sentiment.label === 'positive') {
-        insights.push('Customer expresses satisfaction and positive experience');
-        insights.push('Opportunity to leverage positive feedback for testimonials');
-    } else if (sentiment.label === 'negative') {
-        insights.push('Customer concerns identified - immediate attention recommended');
-        insights.push('Potential for service recovery and relationship improvement');
-    } else {
-        insights.push('Neutral feedback indicates room for improvement');
-    }
-    
-    // Category-specific insights
-    switch (category) {
-        case 'product':
-            insights.push('Product-related feedback affects core offering quality');
-            break;
-        case 'service':
-            insights.push('Service feedback impacts customer experience directly');
-            break;
-        case 'support':
-            insights.push('Support feedback indicates team performance levels');
-            break;
-        case 'general':
-            insights.push('General feedback provides overall business insights');
-            break;
-    }
-    
-    // Word count insights
-    if (wordCount > 100) {
-        insights.push('Extensive feedback suggests high customer engagement');
-    }
-    
-    return insights;
-}
+        const result = await response.json();
 
-// Generate AI recommendations
-function generateRecommendations(sentiment, category, priority) {
-    const recommendations = [];
-    
-    // Priority-based recommendations
-    if (priority === 'urgent') {
-        recommendations.push({
-            type: 'immediate',
-            text: 'Immediate response required - escalate to senior management within 2 hours'
-        });
-    } else if (priority === 'high') {
-        recommendations.push({
-            type: 'priority',
-            text: 'High priority issue - respond within 24 hours with action plan'
-        });
+        // Display results
+        displayResults(result);
+
+        // Save to history
+        saveToHistory(result);
+
+        // Hide loading state
+        setLoadingState(false);
+
+        // Show results section
+        resultsSection.classList.add('show');
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+        console.error('Error during request:', error);
+        setLoadingState(false);
+        alert('There was an error submitting the feedback. Please try again later.');
     }
-    
-    // Sentiment-based recommendations
-    if (sentiment.label === 'negative') {
-        recommendations.push({
-            type: 'recovery',
-            text: 'Implement service recovery protocol - personal follow-up recommended'
-        });
-        recommendations.push({
-            type: 'analysis',
-            text: 'Analyze root cause to prevent similar issues in the future'
-        });
-    } else if (sentiment.label === 'positive') {
-        recommendations.push({
-            type: 'leverage',
-            text: 'Request customer testimonial or review for marketing purposes'
-        });
-        recommendations.push({
-            type: 'maintain',
-            text: 'Maintain current service standards that generated positive feedback'
-        });
-    }
-    
-    // Category-specific recommendations
-    switch (category) {
-        case 'product':
-            recommendations.push({
-                type: 'product',
-                text: 'Share feedback with product development team for future improvements'
-            });
-            break;
-        case 'service':
-            recommendations.push({
-                type: 'training',
-                text: 'Consider staff training if service issues are identified'
-            });
-            break;
-        case 'support':
-            recommendations.push({
-                type: 'process',
-                text: 'Review support processes and knowledge base effectiveness'
-            });
-            break;
-    }
-    
-    // General recommendations
-    recommendations.push({
-        type: 'follow-up',
-        text: 'Schedule follow-up communication to ensure customer satisfaction'
-    });
-    
-    return recommendations;
 }
 
 // Display analysis results
@@ -260,10 +100,10 @@ function displayResults(result) {
     // Update sentiment display
     scoreValue.textContent = result.sentiment.score;
     sentimentLabel.textContent = result.sentiment.label;
-    
+
     // Update score circle styling
     scoreCircle.className = `score-circle ${result.sentiment.label}`;
-    
+
     // Update insights
     insightsList.innerHTML = '';
     result.insights.forEach(insight => {
@@ -271,7 +111,7 @@ function displayResults(result) {
         li.textContent = insight;
         insightsList.appendChild(li);
     });
-    
+
     // Update recommendations
     recommendationsList.innerHTML = '';
     result.recommendations.forEach(rec => {
@@ -282,7 +122,7 @@ function displayResults(result) {
         `;
         recommendationsList.appendChild(div);
     });
-    
+
     // Update metadata
     confidence.textContent = `${result.metadata.confidence}%`;
     processingTime.textContent = `${result.metadata.processingTime}ms`;
@@ -293,12 +133,12 @@ function displayResults(result) {
 // Save result to history
 function saveToHistory(result) {
     feedbackHistory.unshift(result);
-    
+
     // Keep only last 10 items
     if (feedbackHistory.length > 10) {
         feedbackHistory = feedbackHistory.slice(0, 10);
     }
-    
+
     localStorage.setItem('feedbackHistory', JSON.stringify(feedbackHistory));
     loadHistory();
 }
@@ -309,17 +149,17 @@ function loadHistory() {
         historyList.innerHTML = '<p class="no-history">No feedback processed yet</p>';
         return;
     }
-    
+
     historyList.innerHTML = '';
     feedbackHistory.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
-        
+
         const date = new Date(item.timestamp).toLocaleString();
         const truncatedText = item.originalText.length > 100 
             ? item.originalText.substring(0, 100) + '...'
             : item.originalText;
-        
+
         div.innerHTML = `
             <div class="history-item-header">
                 <span class="history-item-date">${date}</span>
@@ -329,7 +169,7 @@ function loadHistory() {
             </div>
             <div class="history-item-text">${truncatedText}</div>
         `;
-        
+
         historyList.appendChild(div);
     });
 }
@@ -349,16 +189,16 @@ function exportResults() {
         alert('No data to export');
         return;
     }
-    
+
     const exportData = {
         exportDate: new Date().toISOString(),
         totalFeedback: feedbackHistory.length,
         data: feedbackHistory
     };
-    
+
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    
+
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
     link.download = `feedback-analysis-${new Date().toISOString().split('T')[0]}.json`;
