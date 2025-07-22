@@ -66,7 +66,7 @@ async function handleFormSubmit(e) {
 
     try {
         // Send POST request to API Gateway
-        const response = await fetch('https://<api-id>.execute-api.<region>.amazonaws.com/feedback', {
+         const response = await fetch('https://mc2msr9tqf.execute-api.us-east-1.amazonaws.com/feedback', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
