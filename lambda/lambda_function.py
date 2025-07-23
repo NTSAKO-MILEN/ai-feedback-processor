@@ -9,6 +9,9 @@ BUCKET_NAME = os.environ['BUCKET_NAME']
 
 def lambda_handler(event, context):
     try:
+        # Log the incoming event for debugging
+        print(f"Event: {json.dumps(event)}")
+
         # Get feedback text from event (JSON format)
         feedback = event.get('feedback')
         if not feedback:
@@ -34,6 +37,8 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
+        # Log the exception for debugging
+        print(f"Error: {str(e)}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
